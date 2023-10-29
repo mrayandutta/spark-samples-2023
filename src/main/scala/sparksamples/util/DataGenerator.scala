@@ -6,7 +6,7 @@ import org.apache.spark.sql.types._
 import java.sql.Timestamp
 import scala.util.Random
 
-class DataGenerator {
+object DataGenerator {
   def main(args: Array[String]): Unit = {
     // Initialize SparkSession
     val spark = SparkSession.builder()
