@@ -8,7 +8,7 @@ object HelloWorldSpark {
     // Initialize SparkSession
     val spark = SparkSession.builder()
       .appName("HelloWorldSpark")
-      .master("local[*]") // using local mode for demonstration, adjust as needed
+      //.master("local[*]") // using local mode for demonstration, adjust as needed
       .getOrCreate()
 
     // Simple 'Hello World' logic
