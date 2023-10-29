@@ -8,64 +8,86 @@
     <artifactId>spark-samples-2023</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-        <properties>
-            <maven.compiler.source>1.8</maven.compiler.source>
-            <maven.compiler.target>1.8</maven.compiler.target>
-            <spark.version>3.2.2</spark.version>
-            <scala.binary.version>2.12</scala.binary.version> <!-- Scala binary version property -->
-        </properties>
+    <!-- Properties section for defining common variables -->
+    <properties>
+        <!-- Java compiler source and target versions -->
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <!-- Apache Spark version -->
+        <spark.version>3.2.2</spark.version>
+        <!-- Scala binary version -->
+        <scala.binary.version>2.12</scala.binary.version>
+        <!-- Scala version -->
+        <scala.version>2.12.10</scala.version>
+    </properties>
 
-        <dependencies>
-            <!-- Apache Spark core dependency -->
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-core_${scala.binary.version}</artifactId> <!-- Using Scala version property -->
-                <version>${spark.version}</version>
-            </dependency>
+    <!-- Dependencies for the project -->
+    <dependencies>
+        <!-- Apache Spark core dependency -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <!-- Apache Spark SQL dependency -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+    </dependencies>
 
-            <!-- Apache Spark SQL dependency (if needed) -->
-            <dependency>
-                <groupId>org.apache.spark</groupId>
-                <artifactId>spark-sql_${scala.binary.version}</artifactId> <!-- Using Scala version property -->
-                <version>${spark.version}</version>
-            </dependency>
+    <!-- Build configuration -->
+    <build>
+        <plugins>
+            <!-- Java Compiler Plugin for compiling Java code -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
 
-            <!-- Add other Spark module dependencies or additional libraries as needed -->
-        </dependencies>
+            <!-- Scala Maven Plugin for compiling Scala code -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.5.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>  <!-- Compile Scala sources -->
+                            <goal>testCompile</goal>  <!-- Compile Scala test sources -->
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                    <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
-                    </configuration>
-                </plugin>
-                <!-- Add this Maven Shade Plugin configuration -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.2.4</version>
-                    <executions>
-                        <execution>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>shade</goal>
-                            </goals>
-                            <configuration>
-                                <transformers>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                        <mainClass>sparksamples.basic.HelloWorldSpark</mainClass>
-                                    </transformer>
-                                </transformers>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </build>
-
-    </project>
+            <!-- Maven Shade Plugin for creating an uber JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>  <!-- Bind to package phase -->
+                        <goals>
+                            <goal>shade</goal>  <!-- Create an uber JAR -->
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <!-- Specify the main class for the JAR -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>sparksamples.basic.HelloWorldSpark</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
