@@ -10,7 +10,7 @@ object DataGenerator {
   def main(args: Array[String]): Unit = {
     // Initialize SparkSession
     val spark = SparkSession.builder()
-      .appName("HelloWorldSpark")
+      .appName("DataGenerator")
       .getOrCreate()
 
     val schema = StructType(Array(
