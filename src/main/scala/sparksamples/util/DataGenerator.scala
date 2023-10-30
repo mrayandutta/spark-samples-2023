@@ -52,12 +52,15 @@ object DataGenerator {
 
     val rdd = spark.sparkContext.parallelize(rows)
     val df = spark.createDataFrame(rdd, schema)
+    val fileWriteLocation = "/dummydata/sample"
+    val fileFormat = "csv"
 
     // Cache the DataFrame
-    df.cache()
+    //df.cache()
     // Trigger an action to populate the cache
-    df.count()
-    println(s"Generated approximately $desiredSizeInMB MB of data with ${df.count()} rows.")
+    //df.count()
+    df.write.format(fileFormat).save(fileWriteLocation)
+    println(s"Generated approximately $desiredSizeInMB MB of data at location ' ${fileWriteLocation} '")
 
     // Stop SparkSession
     spark.stop()
