@@ -1,85 +1,69 @@
 package sparksamples.util
 
 import org.apache.spark.scheduler._
+import scala.collection.mutable
+import org.apache.spark.TaskEndReason
+import org.apache.spark.Success
 
-class DebuggingSparkListener extends SparkListener {
 
-  // Job Events
-  override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
-    println(s"Job started with ID: ${jobStart.jobId}, Stages: ${jobStart.stageIds.mkString(",")}")
+  class DebuggingSparkListener extends SparkListener {
+    val jobToStages: mutable.Map[Int, List[Int]] = mutable.Map()
+
+    private def log(message: String): Unit = {
+      println(s"*******@@@@@ $message")
+    }
+
+    override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
+      val stageIds = jobStart.stageIds.toList  // Convert Seq[Int] to List[Int]
+      jobToStages(jobStart.jobId) = stageIds
+      log(s"Job started with ID: ${jobStart.jobId}, Stages: ${stageIds.mkString(",")}")
+    }
+
+
+    override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
+      jobEnd.jobResult match {
+        case JobSucceeded => log(s"Job ${jobEnd.jobId} succeeded.")
+        case JobFailed(exception) =>
+          log(s"Job ${jobEnd.jobId} failed due to: ${exception.getMessage}")
+          log(s"Stack Trace: ${exception.getStackTrace.mkString("\n")}")
+      }
+    }
+
+    override def onStageSubmitted(stageSubmitted: SparkListenerStageSubmitted): Unit = {
+      val stageInfo = stageSubmitted.stageInfo
+      log(s"Stage submitted: ${stageInfo.name}, ID: ${stageInfo.stageId}, Associated Job IDs: ${jobToStages.collect { case (jobId, stageIds) if stageIds.contains(stageInfo.stageId) => jobId }.mkString(",")}")
+    }
+
+    override def onStageCompleted(stageCompleted: SparkListenerStageCompleted): Unit = {
+      stageCompleted.stageInfo.failureReason match {
+        case Some(reason) => log(s"Stage ${stageCompleted.stageInfo.stageId} failed due to: $reason")
+        case None => log(s"Stage ${stageCompleted.stageInfo.stageId} completed successfully.")
+      }
+    }
+
+    override def onTaskStart(taskStart: SparkListenerTaskStart): Unit = {
+      log(s"Task started with ID: ${taskStart.taskInfo.taskId}, Stage: ${taskStart.stageId}")
+    }
+
+    override def onTaskEnd(taskEnd: SparkListenerTaskEnd): Unit = {
+      taskEnd.reason match {
+        case Success => log(s"Task ${taskEnd.taskInfo.taskId} succeeded.")
+        case _ =>
+          log(s"Task ${taskEnd.taskInfo.taskId} failed due to: ${taskEnd.reason}")
+          log(s"Task Metrics: ${taskEnd.taskMetrics}")
+      }
+    }
+
+    override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
+      log(s"Executor added: ${executorAdded.executorId}")
+    }
+
+    override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = {
+      log(s"Executor removed: ${executorRemoved.executorId}, Reason: ${executorRemoved.reason}")
+    }
+
+    override def onOtherEvent(event: SparkListenerEvent): Unit = {
+      log(s"Other event: $event")
+    }
+
   }
-
-  override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
-    println(s"Job ended with ID: ${jobEnd.jobId}, Result: ${jobEnd.jobResult}")
-  }
-
-  // Stage Events
-  override def onStageSubmitted(stageSubmitted: SparkListenerStageSubmitted): Unit = {
-    println(s"Stage submitted: ${stageSubmitted.stageInfo.name}, ID: ${stageSubmitted.stageInfo.stageId}")
-  }
-
-  override def onStageCompleted(stageCompleted: SparkListenerStageCompleted): Unit = {
-    println(s"Stage completed: ${stageCompleted.stageInfo.name}, ID: ${stageCompleted.stageInfo.stageId}")
-  }
-
-  // Task Events
-  override def onTaskStart(taskStart: SparkListenerTaskStart): Unit = {
-    println(s"Task started with ID: ${taskStart.taskInfo.taskId}, Stage: ${taskStart.stageId}")
-  }
-
-  override def onTaskGettingResult(taskGettingResult: SparkListenerTaskGettingResult): Unit = {
-    println(s"Task getting result with ID: ${taskGettingResult.taskInfo.taskId}")
-  }
-
-  override def onTaskEnd(taskEnd: SparkListenerTaskEnd): Unit = {
-    println(s"Task ended with ID: ${taskEnd.taskInfo.taskId}, Metrics: ${taskEnd.taskMetrics}, Reason: ${taskEnd.reason}")
-  }
-
-  // Executor Events
-  override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
-    println(s"Executor added: ${executorAdded.executorId}")
-  }
-
-  override def onExecutorRemoved(executorRemoved: SparkListenerExecutorRemoved): Unit = {
-    println(s"Executor removed: ${executorRemoved.executorId}")
-  }
-
-  override def onExecutorBlacklisted(executorBlacklisted: SparkListenerExecutorBlacklisted): Unit = {
-    println(s"Executor blacklisted: ${executorBlacklisted.executorId}")
-  }
-
-  override def onExecutorUnblacklisted(executorUnblacklisted: SparkListenerExecutorUnblacklisted): Unit = {
-    println(s"Executor unblacklisted: ${executorUnblacklisted.executorId}")
-  }
-
-  // Block Manager Events
-  override def onBlockManagerAdded(blockManagerAdded: SparkListenerBlockManagerAdded): Unit = {
-    println(s"Block Manager added: ${blockManagerAdded.blockManagerId}")
-  }
-
-  override def onBlockManagerRemoved(blockManagerRemoved: SparkListenerBlockManagerRemoved): Unit = {
-    println(s"Block Manager removed: ${blockManagerRemoved.blockManagerId}")
-  }
-
-  // Environment and Other Events
-  override def onEnvironmentUpdate(environmentUpdate: SparkListenerEnvironmentUpdate): Unit = {
-    println(s"Environment updated: ${environmentUpdate.environmentDetails}")
-  }
-
-  override def onApplicationStart(applicationStart: SparkListenerApplicationStart): Unit = {
-    println(s"Application started: ${applicationStart.appName}, ID: ${applicationStart.appId.getOrElse("N/A")}")
-  }
-
-  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
-    println(s"Application ended at time: ${applicationEnd.time}")
-  }
-
-  override def onOtherEvent(event: SparkListenerEvent): Unit = {
-    println(s"Other event: $event")
-  }
-
-  override def onUnpersistRDD(unpersistRDD: SparkListenerUnpersistRDD): Unit = {
-    println(s"RDD Unpersisted with ID: ${unpersistRDD.rddId}")
-  }
-}
-
