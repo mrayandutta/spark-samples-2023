@@ -12,6 +12,8 @@ object DataGenerator {
     val spark = SparkSession.builder()
       .appName("DataGenerator")
       .getOrCreate()
+    val sc = spark.sparkContext
+    sc.addSparkListener(new DebuggingSparkListener())
 
     val schema = StructType(Array(
       StructField("user_id", IntegerType, nullable = false),

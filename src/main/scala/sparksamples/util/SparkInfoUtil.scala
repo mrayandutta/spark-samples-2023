@@ -20,6 +20,8 @@ object SparkInfoUtil {
     println(s"Executor Memory: ${conf.get("spark.executor.memory", "Not Set")}")
     println(s"Executor Cores: ${conf.get("spark.executor.cores", "Not Set")}")
     println(s"Total Executor Cores: ${conf.get("spark.cores.max", "Not Set")}")
+    println(s"spark.eventLog.dir: ${conf.get("spark.eventLog.dir")}")
+    println(s"spark.eventLog.enabled: ${conf.get("spark.eventLog.enabled")}")
 
     // Create a dummy DataFrame and count the number of rows
     val sampleDF = spark.createDataFrame(Seq((1, "Apple"), (2, "Banana"), (3, "Cherry")))
